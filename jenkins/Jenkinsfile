@@ -8,6 +8,12 @@ pipeline {
     }
 
     stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/amrAdel-1/DevOps-Monitoring-Platform.git'
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 sh """
