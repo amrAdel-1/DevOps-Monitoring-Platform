@@ -11,7 +11,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh """
-                docker build -t $DOCKERHUB_USER/$DOCKER_IMAGE:$DOCKER_TAG .git/app
+                docker build -t $DOCKERHUB_USER/$DOCKER_IMAGE:$DOCKER_TAG ./app
                 """
             }
         }
