@@ -1,0 +1,64 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_USER = 'amradel2002'
+        DOCKER_IMAGE = 'devops-monitoring-platform'
+        DOCKER_TAG = 'latest'
+    }
+
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                sh """
+                docker build -t $DOCKERHUB_USER/$DOCKER_IMAGE:$DOCKER_TAG .
+                """
+            }
+        }
+
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'USERNAME',
+                    passwordVariable: 'PASSWORD'
+                )]) {
+                    sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh "docker push $DOCKERHUB_USER/$DOCKER_IMAGE:$DOCKER_TAG"
+            }
+        }
+
+        stage('Deploy to Kubernetes with Helm') {
+            steps {
+                sh """
+                helm upgrade --install myrelease ./helm-app \
+                    --set app.image=$DOCKERHUB_USER/$DOCKER_IMAGE:$DOCKER_TAG
+                """
+            }
+        }
+
+        stage('Deploy Monitoring (Prometheus + Grafana)') {
+            steps {
+                sh """
+                # Install Prometheus
+                helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+                helm repo update
+                helm upgrade --install prometheus prometheus-community/prometheus --namespace monitoring --create-namespace
+
+                # Install Grafana
+                helm repo add grafana https://grafana.github.io/helm-charts
+                helm repo update
+                helm upgrade --install grafana grafana/grafana --namespace monitoring --create-namespace \
+                    --set adminUser=admin \
+                    --set adminPassword=newpass123
+                """
+            }
+        }
+    }
+}

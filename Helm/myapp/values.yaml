@@ -1,0 +1,32 @@
+app:
+  image: "amradel2002/devops-monitoring-platform:latest"
+  replicas: 2
+  port: 8000
+  type: ClusterIP
+  imagePullPolicy: IfNotPresent
+
+postgres:
+  image: "postgres:14"
+  replicas: 1
+  port: 5432
+  user: "admin"
+  password: "admin123"
+  database: "mydb"
+  persistence:
+    enabled: false
+  imagePullPolicy: IfNotPresent
+
+service :
+  type: ClusterIP  
+  port: 8000
+  
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+serviceAccount:
+  create: true
+  name: myapp-sa

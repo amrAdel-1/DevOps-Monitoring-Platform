@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myapp.fullname" . }}-app
+  labels:
+    {{- include "myapp.labels" . | nindent 4 }}
+    component: app
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ include "myapp.name" . }}
+      component: app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ include "myapp.name" . }}
+        component: app
+    spec:
+      containers:
+        - name: {{ include "myapp.name" . }}-app
+          image: "{{ .Values.app.image }}"
+          imagePullPolicy: {{ .Values.app.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.app.port }}
+              protocol: TCP
